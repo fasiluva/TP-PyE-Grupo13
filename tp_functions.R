@@ -110,4 +110,40 @@ calculaFuentesCalefaccion <- function(datos) {
   return(c(gasNatural, gasEnvasado, leniaCarbon, electricidad))
 }
 
+eliminaNA <- function(datos) {
+  
+  res <- c()
+  
+  for (i in 1:length(datos)) {
+    if (is.na(datos[i]))
+      next
+    else {
+      res <- c(res, datos[i])
+    }
+  }
+  
+  return(res)
+}
+
+tieneConectividad <- function(servicio, datos) {
+  
+  si <- 0
+  no <- 0
+  
+  for (i in 1:length(servicio)) {
+    if (grepl("Si", servicio[i]) || grepl("Sí", servicio[i])) {
+      si <- si + 1
+    }
+    else {
+      if (grepl("Sí", datos[i])) {
+        si <- si + 1
+      }
+      else {
+        no <- no + 1
+      }
+    }
+  }
+  
+  return(c(si, no))
+}
 

@@ -20,7 +20,6 @@ colnames(datos_excel_solo_resultados) <- paste0("C", seq_len(ncol(datos_excel_so
 # Cambia las columnas que tienen valores inutiles:
 datos_excel_solo_resultados$C17[is.na(datos_excel_solo_resultados$C17)] <- 0 
 datos_excel_solo_resultados$C20[is.na(datos_excel_solo_resultados$C20)] <- "No"
-datos_excel_solo_resultados$C21[is.na(datos_excel_solo_resultados$C21)] <- "Sin costo"
 datos_excel_solo_resultados$C22[is.na(datos_excel_solo_resultados$C22)] <- "Sin aumento"
 datos_excel_solo_resultados$C23[is.na(datos_excel_solo_resultados$C23)] <- "Sin aumento"
 
@@ -69,7 +68,7 @@ fuente <- "Fuente: La Poderosa. Encuesta realizado a barrios populares de Argent
 datos_provincias <- table(datos_excel_solo_resultados[[2]])
 datos_provincias <- datos_provincias[order(datos_provincias, decreasing = TRUE)]
 
-frec_rel_prov <- round(datos_provincias/nrow(datos_provincias), 3)
+frec_rel_prov <- round(datos_provincias/cant_viviendas * 100, 3)
 tabla_frec_prov <- t(rbind(datos_provincias, frec_rel_prov))
 colnames(tabla_frec_prov) <- c("Encuestas", "Frecuencia relativa (en %)")
 tabla_frec_prov <- rbind(tabla_frec_prov, c(1222, 100))
@@ -81,7 +80,7 @@ tabla_frec_prov
 datos_barrios <- table(datos_excel_solo_resultados[[3]])
 datos_barrios <- datos_barrios[order(datos_barrios, decreasing=TRUE)]
 
-frec_rel_bar <-  round(datos_barrios/nrow(datos_barrios), 3)
+frec_rel_bar <-  round(datos_barrios/cant_viviendas * 100, 3)
 tabla_frec_bar <- t(rbind(datos_barrios, frec_rel_bar))
 colnames(tabla_frec_bar) <- c("Encuestas", "Frecuencia relativa (en %)")
 tabla_frec_bar <- rbind(tabla_frec_bar, c(1222, 100))
@@ -164,13 +163,12 @@ mtext(fuente, side=1, line=1, at=-0.2)
 tabla_presion_almacenamiento <- table(datos_excel_solo_resultados$C27[datos_excel_solo_resultados$C27 != "Sí"], 
                                       datos_excel_solo_resultados$C26[datos_excel_solo_resultados$C27 != "Sí"])
 
-par(las=1, cex.lab=1.2, mar=c(5,5,5,1))
 barplot(tabla_presion_almacenamiento, 
         beside=TRUE,
         horiz=TRUE,
         col=paleta,
         xlim=c(0,300),
-        main="Presencia de capacidad de almacenamiento de agua en altura respecto a la presion del agua.\nBarrios populares de Argentina, 2020"
+        main="Presencia de capacidad de almacenamiento de agua en altura respecto a la presión del agua.\nBarrios populares de Argentina, 2020."
         )
 abline(v=seq(0,300,25), col="grey", lty="dotted",)
 legend(x =170, y = 15, 
@@ -187,9 +185,85 @@ fuentes <- calculaFuentesCalefaccion(cant_fuentes_calefaccion)
 cant_ventilacion <- table(datos_excel_solo_resultados[["C39"]])
 
 
+# ================== Descripcion grafica de alquiler.
+
+par(mfrow = c(1, 2))
+
+cant_propiedad <- table(datos_excel_solo_resultados[["C19"]])
+
+barplot(cant_propiedad[order(cant_propiedad, decreasing=TRUE)], 
+    col=paleta[3],
+    ylim=c(0, 600), 
+    main="Tipo de tenencia sobre la propiedad\nBarrios populares de Argentina, 2020.",
+    ylab="Viviendas",
+    xlab="Tenencia")
+abline(h=seq(0,600, 50), col="black", lty=3)
+mtext(fuente, side=1, line=4, at=1.5)
+
+cant_costo <- datos_excel_solo_resultados[["C21"]]
+cant_costo <- eliminaNA(cant_costo)
+
+hist(cant_costo,
+     breaks=seq(3000, 30000, 3000),
+     col=paleta[4],
+     axes=FALSE,
+     main="Costo aproximado del alquiler de las viviendas\nBarrios populares de Argentina, 2020.",
+     xlab="Costo",
+     ylab="Viviendas"
+     )
+axis(side=1, at=seq(3000, 30000, 3000))
+axis(side=2, at=seq(0, 40, 5))
+abline(h=seq(5, 35, 5), col="black", lty=3)
+mtext(fuente, side=1, line=4, at=5000)
+
+dev.off()
+
+# ================== Descripcion grafica de tendido electrico.
+
+par(mfrow = c(1, 2))
+
+cant_tendido_electrico <- table(datos_excel_solo_resultados[["C41"]])
+cant_incendios <- table(datos_excel_solo_resultados[["C43"]])
+
+pie(cant_tendido_electrico, 
+    col= paleta,
+    labels=paste(c("Total o parcialmente\n fuera de las paredes", "Totalmente dentro \nde las paredes"), c("\n"), 
+                 round(cant_tendido_electrico/cant_viviendas * 100, 2), c("%")), 
+    clockwise=TRUE,
+    radius=1.2,
+    main="Tendido eléctrico de las viviendas.\nBarrios populares de Argentina, 2020."
+)
+mtext(fuente, side=1, line=2)
+
+pie(cant_incendios, 
+    col= c(paleta[2], paleta[1]),
+    labels=paste(c("No", "Si"), c("\n"), 
+                 round(cant_incendios/cant_viviendas * 100, 2), c("%")), 
+    clockwise=TRUE,
+    radius=1.2,
+    main="Viviendas que experimentaron incendios en el último año\n debido a las condiciones de la instalacíon eléctrica.\nBarrios populares de Argentina, 2020."
+)
+mtext(fuente, side=1, line=2)
+
+dev.off()
+
+# ================== Descripcion grafica de conectividad.
+
+cant_conectividad <- datos_excel_solo_resultados[["C46"]]
+cant_conectividad <- tieneConectividad(cant_conectividad, datos_excel_solo_resultados[["C47"]])
+
+pie(cant_conectividad, 
+    col= c(paleta[2], paleta[1]),
+    labels=paste(c("Si", "No"), c("\n"), 
+                 round(cant_conectividad/cant_viviendas * 100, 2), c("%")), 
+    clockwise=TRUE,
+    radius=1,
+    main="Viviendas con al menos un teléfono celular con conectividad a Internet.\nBarrios populares de Argentina, 2020."
+)
+mtext(fuente, side=1, line=2)
 
 
-# ================== Descripcion grafica de costo de alquiler.
+
 # ================== Medidas de posicion y dispersion de anteriores mencionados
 # ================== Relacion entre 2 variables?
 
