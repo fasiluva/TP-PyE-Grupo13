@@ -1,17 +1,13 @@
 # Instala los paquetes necesarios
 install.packages("readxl")
 install.packages("tidyr")
+install.packages("ggplot2")
 library(readxl)
+library(ggplot2)
 library(tidyr)
 
 # Incluye el archivo de funciones
 source("tp_functions.R")
-
-# Lee el excel completo
-datos_excel <- read_excel("Datos_LP.xlsx")
-
-# Lee solo las preguntas
-datos_excel_solo_preguntas <- datos_excel[2,]
 
 # Lee solo las encuestas y modifica los nombres de las columnas
 datos_excel_solo_resultados <- read_excel("Datos_LP.xlsx", range=cell_rows(c(4, NA)), col_names = FALSE)
@@ -64,7 +60,7 @@ paleta_degradado <- colorRampPalette(c(paleta[4], paleta[2]))
 paleta_degradado <- paleta_degradado(10)
 fuente <- "Fuente: La Poderosa. Encuesta realizado a barrios populares de Argentina."
 
-# *********************************************************************
+# **********************************************************************
   
 # Total de provincias
 datos_provincias <- table(datos_excel_solo_resultados[[2]])
@@ -187,16 +183,22 @@ print(paste("Hay un total de",
             round(cant_discapacidad_total/sum(cant_total_personas) * 100, 2),
             "% del total de personas."))
 
-tabla_integrantes_menores <- table(datos_excel_solo_resultados[["C6"]], cant_menores)
-plot(x=datos_excel_solo_resultados[["C6"]], y=cant_menores, 
-     type="p",
-     xlab="Cantidad de integrantes",
-     ylab="Cantidad de menores",
-     col=determinaColor(tabla_integrantes_menores, paleta_degradado),
+plot(x=datos_excel_solo_resultados[["C6"]], y=cant_menores,
+     xlab="Integrantes",
+     ylab="Menores",
+     xlim=c(0,10),
+     ylim=c(0,9),
+     axes=FALSE,
+     col="black",
+     main="Diagrama de dispersión de cantidad de integrantes de la vivienda e integrantes y menores de edad\nBarrios populares de Argentina, año 2020."
      )
+mtext(fuente, side=1, line=4, at=2)
+axis(1, seq(0,10,1))
+axis(2, seq(0,10,1))
+abline(h=seq(0,10,1), col="grey", lty="dotted")
+abline(v=seq(0,10,1), col="grey", lty="dotted")
 
-
-# ================== Descripcion grafica de obtencion de agua y saneamiento.
+# ================== Descripcion grafica de tabla_integrantes_menores# ================== Descripcion grafica de obtencion de agua y saneamiento.
 
 # Como obtiene el agua?
 par(las=1, cex.lab=1.2, mar=c(5,10,5,1))
